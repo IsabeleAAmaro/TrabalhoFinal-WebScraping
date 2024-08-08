@@ -7,21 +7,24 @@ driver = webdriver.Chrome()
 
 driver.get("https://www.searchencrypt.com/home")
 
-search_bar = driver.find_element(By.ID, "search-input")  # Assumindo que o ID do campo de pesquisa é "search-input".
+search_bar = driver.find_element(By.CLASS_NAME, "search-bar__search")
 search_bar.send_keys("Isabele Araújo Amaro")
 
-search_button = driver.find_element(By.ID, "search-button")  # Assumindo que o ID do botão de pesquisa é "search-button"
+search_button = driver.find_element(By.CLASS_NAME, "search-bar__submit")
 search_button.click()
 
 WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.CSS_SELECTOR, ".result-item"))
+    EC.presence_of_element_located((By.CLASS_NAME, "serp__web-result__container"))
 )
 
-all_results = driver.find_elements(By.CSS_SELECTOR, ".result-item")
+all_results = driver.find_elements(By.CLASS_NAME, "serp__web-result__container")
 total_results = len(all_results)
 
-exact_results = driver.find_elements(By.CSS_SELECTOR, ".result-item:contains('Isabele Araújo Amaro')")
-exact_matches = len(exact_results)
+exact_matches = 0
+for result in all_results:
+    description = result.find_element(By.CSS_SELECTOR, ".web-result__description").text
+    if "Isabele Araújo Amaro" in description:
+        exact_matches += 1
 
 print("Resultados encontrados:", total_results)
 print("Resultados exatos:", exact_matches)
