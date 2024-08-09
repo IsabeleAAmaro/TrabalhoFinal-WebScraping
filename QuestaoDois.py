@@ -3,6 +3,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+""" 
+Faça um programa Python com Selenium: a primeira página é
+https://www.searchencrypt.com/home. Escreva o seu nome completo na busca da
+ferramenta. Quantos resultados aparecem? Quantos resultados realmente possuem o seu
+nome completo (sem ausências e sem acréscimos)?
+"""
+
 driver = webdriver.Chrome()
 
 driver.get("https://www.searchencrypt.com/home")
