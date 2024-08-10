@@ -1,75 +1,56 @@
+import re
 import requests
 from bs4 import BeautifulSoup
-import re
-
-"""
-Faça um programa Python que pesquisa preços do livro “Criação” de Gore
-Vidal. O programa deve pesquisar os preços em três diferentes sites (escolhidos por você) e
-selecionar o de menor valor em cada site (apenas primeira página). No final, o programa
-deve apresentar os valores da compra e os sites de venda. A lista deve ser apresentada por
-ordem crescente do valor do produto.
-"""
-
-"""
-Função para pesquisar um livro em um site específico.
-
-Args:
-    url (str): URL da página de busca do site.
-    book_title (str): Título do livro a ser pesquisado.
-
-Returns:
-    list: Lista de tuplas (preço, link), ou None se nenhum resultado for encontrado.
-"""
 
 
-def search_book(url, book_title):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an exception for error HTTP status codes
+def search_book(url, book_title, site_name):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
 
-        soup = BeautifulSoup(response.content, 'html.parser')
+    selectors = {
+        "Livraria da Travessa": {
+            "price": "#gridBusca_ctl00_a_lblPreco"
+        },
+        "Estante Virtual": {
+            "price": ".product-item__text"
+        },
+        "Sebo Virtual Da Rô": {
+            "price": ".js-price-display.price.item-price"
+        }
+    }
 
-        # Aqui você precisa adaptar o seletor CSS ou XPath para encontrar os elementos que contêm o preço e o link do
-        # livro Por exemplo, para encontrar todos os elementos <div> com a classe "product-price":
-        prices = soup.find_all('div', class_='product-price')
+    price_selector = selectors[site_name]["price"]
 
-        results = []
-        for price in prices:
-            # Extrai o preço do elemento, removendo caracteres não numéricos
-            price_text = price.text.strip()
-            price_value = float(re.sub(r'\D', '', price_text))
+    results = []
+    for result in soup.select(price_selector):
+        price_text = result.text.strip()
+        price_value = float(re.sub(r'\D', '', price_text))
+        results.append((site_name, price_value))
 
-            # Encontra o link do produto (ajuste o seletor conforme a estrutura do site)
-            link = price.find_next('a')['href']
-
-            results.append((price_value, link))
-
-        return results
-    except requests.exceptions.RequestException as e:
-        print(f"Erro ao buscar no site {url}: {e}")
-        return None
+    return results
 
 
-# Lista de sites e suas URLs de busca (substitua pelos URLs reais)
-sites = [
-    ("Amazon", "https://www.amazon.com.br/s?k=Cria%C3%A7%C3%A3o+Gore+Vidal"),
-    ("Submarino", "https://www.submarino.com.br/busca?q=Cria%C3%A7%C3%A3o+Gore+Vidal"),
-    # Adicione outros sites aqui
-]
+def main():
+    titulo_livro = "Criação"
+    autor_primeiro_nome = "Gore"
+    autor_segundo_nome = "Vidal"
 
-book_title = "Criação"
-author = "Gore Vidal"
+    sites = [
+        ("Sebo Virtual Da Rô", "https://www.sebovirtualdaro.com.br/search/?q=gore+vidal+criacao"),
+        ("Estante Virtual", "https://www.estantevirtual.com.br/busca?nsCat=Natural&q=gore%20vidal%criacao"),
+        ("Livraria da Travessa", "https://www.travessa.com.br/Busca.aspx?d=1&bt=gore%20vidal%20criacao&cta=00&codtipoartigoexplosao=1")]
 
-results = []
-for site_name, url in sites:
-    site_results = search_book(url, book_title)
-    if site_results:
-        results.extend([(site_name, price, link) for price, link in site_results])
+    results = []
+    for site_name, base_url in sites:
+        site_results = search_book(base_url, titulo_livro, site_name)
+        results.extend(site_results)
 
-# Ordena os resultados por preço
-results.sort(key=lambda x: x[1])
+    results.sort(key=lambda x: x[1])
 
-# Imprime os resultados
-print("Resultados da pesquisa:")
-for site, price, link in results:
-    print(f"{site}: R${price:.2f} - {link}")
+    print("Resultados da pesquisa:")
+    for site, price in results:
+        print(f"{site}: R${price:.1f}")
+
+
+if __name__ == "__main__":
+    main()
